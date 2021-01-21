@@ -120,4 +120,35 @@ class MnitDocumentConsumerTest {
 
         verify(mnitClient).send(pdfApplicationFile, County.Olmsted);
     }
+
+    @Test
+    void sendsTheCAFAndCCAPPdfIfTheApplicationHasCCAPAndCAF() {
+        ApplicationFile pdfApplicationFileCCAP = new ApplicationFile("my pdf".getBytes(), "someFileCCAP.pdf");
+        when(pdfGenerator.generate(any(), eq(CCAP), any())).thenReturn(pdfApplicationFileCCAP);
+        ApplicationFile pdfApplicationFileCAF = new ApplicationFile("my pdf".getBytes(), "someFileCAF.pdf");
+        when(pdfGenerator.generate(any(), eq(CAF), any())).thenReturn(pdfApplicationFileCAF);
+        ApplicationFile xmlApplicationFile = new ApplicationFile("my xml".getBytes(), "someFile.xml");
+        when(xmlGenerator.generate(any(), any(), any())).thenReturn(xmlApplicationFile);
+        when(documentListParser.parse(any())).thenReturn(List.of(CCAP, CAF));
+
+        ApplicationData applicationData = new ApplicationData();
+        PagesData pagesData = new PagesData();
+        PageData chooseProgramsPage = new PageData();
+
+        chooseProgramsPage.put("programs", InputData.builder().value(List.of("CCAP","SNAP")).build());
+        pagesData.put("choosePrograms", chooseProgramsPage);
+        applicationData.setPagesData(pagesData);
+
+        Application application = Application.builder()
+                .id("someId")
+                .completedAt(ZonedDateTime.now())
+                .applicationData(applicationData)
+                .county(County.Olmsted)
+                .timeToComplete(null)
+                .build();
+        documentConsumer.process(application);
+
+        verify(mnitClient).send(pdfApplicationFileCCAP, County.Olmsted);
+        verify(mnitClient).send(pdfApplicationFileCAF, County.Olmsted);
+    }
 }
