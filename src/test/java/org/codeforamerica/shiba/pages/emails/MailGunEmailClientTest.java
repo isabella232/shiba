@@ -15,14 +15,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import wiremock.com.fasterxml.jackson.databind.JsonNode;
+import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.matching.MultipartValuePattern.MatchingType.ANY;
 import static org.codeforamerica.shiba.output.caf.ExpeditedEligibility.ELIGIBLE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -59,6 +63,7 @@ class MailGunEmailClientTest {
                 securityEmail,
                 auditEmail,
                 supportEmail,
+                "http://localhost:" + port,
                 "http://localhost:" + port,
                 mailGunApiKey,
                 emailContentCreator,
@@ -201,6 +206,23 @@ class MailGunEmailClientTest {
     }
 
     @Test
+    void validEmailsShouldReturnTrue() {
+        String validEmail = "test@test.com";
+
+        JsonNode response = new ObjectMapper().valueToTree(Map.of("result", "deliverable"));
+        wireMockServer.stubFor(post(anyUrl())
+                .willReturn(aResponse()
+                        .withJsonBody(response)
+                        .withStatus(200)));
+
+        assertTrue(mailGunEmailClient.validateEmailAddress(validEmail));
+
+        wireMockServer.verify(postRequestedFor(urlPathEqualTo("/"))
+                .withBasicAuth(new BasicCredentials("api", mailGunApiKey))
+                .withQueryParam("address", matching(validEmail)));
+    }
+
+    @Test
     void shouldCCSenderEmail_whenSendingCaseworkerEmail_ifCCFlagIsTrue() {
         String recipientEmail = "someRecipient";
         String emailContent = "content";
@@ -209,7 +231,9 @@ class MailGunEmailClientTest {
 
         mailGunEmailClient = new MailGunEmailClient(
                 senderEmail,
-                "", "", "", "http://localhost:" + port,
+                "", "", "",
+                "http://localhost:" + port,
+                "http://localhost:" + port,
                 mailGunApiKey,
                 emailContentCreator,
                 true);

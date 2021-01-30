@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Locale;
 
 public interface EmailClient {
+    boolean validateEmailAddress(String emailAddress);
+
     void sendConfirmationEmail(String recipientEmail,
                                String confirmationId,
                                ExpeditedEligibility expeditedEligibility,

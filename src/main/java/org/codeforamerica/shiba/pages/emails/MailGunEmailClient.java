@@ -1,11 +1,13 @@
 package org.codeforamerica.shiba.pages.emails;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.codeforamerica.shiba.output.ApplicationFile;
 import org.codeforamerica.shiba.output.caf.ExpeditedEligibility;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.security.util.InMemoryResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromFormData;
@@ -30,12 +33,14 @@ public class MailGunEmailClient implements EmailClient {
     private final EmailContentCreator emailContentCreator;
     private final boolean shouldCC;
     private final WebClient webClient;
+    private final WebClient validationWebClient;
 
     public MailGunEmailClient(@Value("${sender-email}") String senderEmail,
                               @Value("${security-email}") String securityEmail,
                               @Value("${audit-email}") String auditEmail,
                               @Value("${support-email}") String supportEmail,
                               @Value("${mail-gun.url}") String mailGunUrl,
+                              @Value("${mail-gun.validation-url}") String mailGunValidationUrl,
                               @Value("${mail-gun.api-key}") String mailGunApiKey,
                               EmailContentCreator emailContentCreator,
                               @Value("${mail-gun.shouldCC}") boolean shouldCC) {
@@ -47,13 +52,36 @@ public class MailGunEmailClient implements EmailClient {
         this.emailContentCreator = emailContentCreator;
         this.shouldCC = shouldCC;
         this.webClient = WebClient.builder().baseUrl(mailGunUrl).build();
+        this.validationWebClient = WebClient.builder().baseUrl(mailGunValidationUrl).build();
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private class EmailValidationResponse {
+        public String result;
+    }
+
+    @Override
+    public boolean validateEmailAddress(String emailAddress) {
+        AtomicBoolean isValid = new AtomicBoolean(false);
+        validationWebClient.post()
+                .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiKey))
+                .body(fromFormData("address", emailAddress))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(EmailValidationResponse.class)
+                .doOnNext(emailValidationResponse -> {
+                    isValid.set(emailValidationResponse.result.equals("deliverable"));
+                })
+                .block();
+
+        return isValid.get();
     }
 
     @Override
     public void sendConfirmationEmail(String recipientEmail,
                                       String confirmationId,
                                       ExpeditedEligibility expeditedEligibility,
-                                      List <ApplicationFile> applicationFiles,
+                                      List<ApplicationFile> applicationFiles,
                                       Locale locale) {
         MultiValueMap<String, Object> form = new LinkedMultiValueMap<>();
         form.put("from", List.of(senderEmail));
