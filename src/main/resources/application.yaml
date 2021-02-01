@@ -15,7 +15,7 @@ audit-email: help+audit@mnbenefits.org
 support-email: mnbenefits@codeforamerica.org
 
 mail-gun:
-  validation-url: "https://api.mailgun.net/v4/address/validate"
+  validation-url: "https://api.mailgun.net/v4"
   url: "https://api.mailgun.net/v3/mail.mnbenefits.org/messages"
   api-key: ${MAILGUN_API_KEY}
   shouldCC: false
@@ -39,5 +39,6 @@ logging:
     org.springframework.ws.server.MessageTracing.sent: DEBUG
     org.springframework.ws.client.MessageTracing.received: DEBUG
     org.springframework.ws.server.MessageTracing.received: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
 
 pagesConfig: pages-config.yaml

@@ -23,6 +23,7 @@ public class ApplicationData {
     private Subworkflows subworkflows = new Subworkflows();
     private Map<String, PagesData> incompleteIterations = new HashMap<>();
 
+
     public void setStartTimeOnce(Instant instant) {
         if (startTime == null) {
             startTime = instant;

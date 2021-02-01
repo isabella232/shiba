@@ -31,15 +31,15 @@ public class InputData {
         this(value, emptyList());
     }
 
-    public Boolean valid() {
+    public Boolean valid(InputData previousInputData) {
         return this.validators.stream()
                 .map(Validator::getValidation)
-                .allMatch(validation -> validation.apply(this.value));
+                .allMatch(validation -> validation.apply(this.value, previousInputData.getValue()));
     }
 
-    public Optional<String> errorMessageKey() {
+    public Optional<String> errorMessageKey(InputData previousInputData) {
         return this.validators.stream()
-                .filter(validator -> !validator.getValidation().apply(this.value))
+                .filter(validator -> !validator.getValidation().apply(this.value, previousInputData.getValue()))
                 .findFirst()
                 .map(Validator::getErrorMessageKey);
     }

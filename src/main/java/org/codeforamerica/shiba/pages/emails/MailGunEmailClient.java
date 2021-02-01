@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.util.InMemoryResource;
 import org.springframework.stereotype.Component;
@@ -33,14 +34,14 @@ public class MailGunEmailClient implements EmailClient {
     private final EmailContentCreator emailContentCreator;
     private final boolean shouldCC;
     private final WebClient webClient;
-    private static WebClient validationWebClient;
+    private static String mailGunValidationUrl;
 
     public MailGunEmailClient(@Value("${sender-email}") String senderEmail,
                               @Value("${security-email}") String securityEmail,
                               @Value("${audit-email}") String auditEmail,
                               @Value("${support-email}") String supportEmail,
                               @Value("${mail-gun.url}") String mailGunUrl,
-                              @Value("${mail-gun.validation-url}") String mailGunValidationUrl,
+                              @Value("${mail-gun.validation-url}") String mailGunValidationUrlInput,
                               @Value("${mail-gun.api-key}") String mailGunApiKeyInput,
                               EmailContentCreator emailContentCreator,
                               @Value("${mail-gun.shouldCC}") boolean shouldCC) {
@@ -52,7 +53,7 @@ public class MailGunEmailClient implements EmailClient {
         this.emailContentCreator = emailContentCreator;
         this.shouldCC = shouldCC;
         this.webClient = WebClient.builder().baseUrl(mailGunUrl).build();
-        validationWebClient = WebClient.builder().baseUrl(mailGunValidationUrl).build();
+        mailGunValidationUrl = mailGunValidationUrlInput;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -60,25 +61,37 @@ public class MailGunEmailClient implements EmailClient {
         public String result;
     }
 
-    public static boolean validateEmailAddress(String emailAddress) {
-        AtomicBoolean isValid = new AtomicBoolean(false);
-        try {
-            validationWebClient.post()
-                    .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiKey))
-                    .body(fromFormData("address", emailAddress))
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .bodyToMono(EmailValidationResponse.class)
-                    .doOnNext(emailValidationResponse -> {
-                        isValid.set(emailValidationResponse.result.equals("deliverable"));
-                    })
-                    .block();
-
-            return isValid.get();
-        } catch (Exception e) {
-
+    public static boolean validateEmailAddress(String emailAddress, String previousEmailAddress) {
+        if (emailAddress.equals(previousEmailAddress)) {
+            return true;
         }
-        return true;
+
+        AtomicBoolean isValid = new AtomicBoolean(false);
+
+        boolean validRegex = emailAddress.trim().matches("[a-zA-Z0-9!#$%&'*+=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?");
+        if (validRegex) {
+            try {
+                WebClient.create(mailGunValidationUrl)
+                        .method(HttpMethod.POST)
+                        .uri(uriBuilder -> uriBuilder.path("/address/validate").queryParam("address", emailAddress).build())
+                        .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiKey))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .bodyValue("")
+                        .retrieve()
+                        .bodyToMono(EmailValidationResponse.class)
+                        .doOnNext(emailValidationResponse -> {
+                            isValid.set(emailValidationResponse.result.equals("deliverable"));
+                        })
+                        .block()
+                ;
+
+                return isValid.get();
+            } catch (Exception e) {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 
     @Override

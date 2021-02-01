@@ -208,6 +208,7 @@ class MailGunEmailClientTest {
     @Test
     void validEmailsShouldReturnTrue() {
         String validEmail = "test@test.com";
+        String previousInvalidEmail = "test@testcom";
 
         JsonNode response = new ObjectMapper().valueToTree(Map.of("result", "deliverable"));
         wireMockServer.stubFor(post(anyUrl())
@@ -215,11 +216,11 @@ class MailGunEmailClientTest {
                         .withJsonBody(response)
                         .withStatus(200)));
 
-        assertTrue(mailGunEmailClient.validateEmailAddress(validEmail));
+        assertTrue(MailGunEmailClient.validateEmailAddress(validEmail, previousInvalidEmail));
 
-        wireMockServer.verify(postRequestedFor(urlPathEqualTo("/"))
+        wireMockServer.verify(postRequestedFor(urlPathEqualTo("/address/validate"))
                 .withBasicAuth(new BasicCredentials("api", mailGunApiKey))
-                .withQueryParam("address", matching(validEmail)));
+                .withQueryParam("address",  matching(validEmail)));
     }
 
     @Test

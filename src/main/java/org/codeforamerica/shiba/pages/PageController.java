@@ -282,9 +282,12 @@ public class PageController {
             pagesData = applicationData.getPagesData();
         }
 
-        pagesData.putPage(page.getName(), pageData);
+//        if (!pagesData.safeGetPageInputValue("contactInfo", "email").get(0).equals(pageData.get("email").getValue(0))) {
+//           PageData previousContactInfoPageData = pagesData.getPage("contactInfo");
+//        }
+        PageData previousPageData = pagesData.putPage(page.getName(), pageData);
 
-        if (pageData.isValid() &&
+        if (pageData.isValid(previousPageData) &&
                 pageWorkflow.getGroupName() != null &&
                 applicationConfiguration.getPageGroups().get(pageWorkflow.getGroupName()).getCompletePages().contains(page.getName())
         ) {
@@ -294,7 +297,7 @@ public class PageController {
             pageEventPublisher.publish(new SubworkflowCompletedEvent(httpSession.getId(), groupName));
         }
 
-        if (pageData.isValid()) {
+        if (pageData.isValid(previousPageData)) {
             ofNullable(pageWorkflow.getEnrichment())
                     .map(applicationEnrichment::getEnrichment)
                     .map(enrichment -> enrichment.process(applicationData))
@@ -316,9 +319,9 @@ public class PageController {
 
         PageData pageData = PageData.fillOut(page, model);
         PagesData pagesData = applicationData.getPagesData();
-        pagesData.putPage(submitPage, pageData);
+        PageData previousPageData = pagesData.putPage(submitPage, pageData);
 
-        if (pageData.isValid()) {
+        if (pageData.isValid(previousPageData)) {
             String id = applicationRepository.getNextId();
             Application application = applicationFactory.newApplication(id, applicationData);
             applicationData.setId(application.getId());

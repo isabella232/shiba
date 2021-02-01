@@ -31,8 +31,8 @@ public class PagesData extends HashMap<String, PageData> {
         return this.getOrDefault(pageName, defaultPageData);
     }
 
-    public void putPage(String pageName, PageData pageData) {
-        this.put(pageName, pageData);
+    public PageData putPage(String pageName, PageData pageData) {
+        return this.put(pageName, pageData);
     }
 
     public DatasourcePages getDatasourcePagesBy(List<PageDatasource> datasources) {
@@ -113,7 +113,7 @@ public class PagesData extends HashMap<String, PageData> {
     private FormInputTemplate convert(String pageName, FormInput formInput, ApplicationData applicationData) {
         String errorMessageKey = Optional.ofNullable(this.getPage(pageName))
                 .map(pageData -> pageData.get(formInput.getName()))
-                .flatMap(InputData::errorMessageKey)
+                .flatMap(previousInputData -> previousInputData.errorMessageKey(previousInputData))
                 .orElse("");
 
         return new FormInputTemplate(

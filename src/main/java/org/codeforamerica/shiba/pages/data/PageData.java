@@ -47,8 +47,8 @@ public class PageData extends HashMap<String, InputData> {
                         )));
     }
 
-    public Boolean isValid() {
-        return values().stream().allMatch(InputData::valid);
+    public Boolean isValid(PageData previousPagesData) {
+        return entrySet().stream().allMatch(entry -> entry.getValue().valid(previousPagesData.get(entry.getKey())));
     }
 
     public Boolean satisfies(Condition condition) {
