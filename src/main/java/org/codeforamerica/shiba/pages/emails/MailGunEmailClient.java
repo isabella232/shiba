@@ -29,11 +29,11 @@ public class MailGunEmailClient implements EmailClient {
     private final String securityEmail;
     private final String auditEmail;
     private final String supportEmail;
-    private final String mailGunApiKey;
+    private static String mailGunApiKey;
     private final EmailContentCreator emailContentCreator;
     private final boolean shouldCC;
     private final WebClient webClient;
-    private final WebClient validationWebClient;
+    private static WebClient validationWebClient;
 
     public MailGunEmailClient(@Value("${sender-email}") String senderEmail,
                               @Value("${security-email}") String securityEmail,
@@ -41,40 +41,44 @@ public class MailGunEmailClient implements EmailClient {
                               @Value("${support-email}") String supportEmail,
                               @Value("${mail-gun.url}") String mailGunUrl,
                               @Value("${mail-gun.validation-url}") String mailGunValidationUrl,
-                              @Value("${mail-gun.api-key}") String mailGunApiKey,
+                              @Value("${mail-gun.api-key}") String mailGunApiKeyInput,
                               EmailContentCreator emailContentCreator,
                               @Value("${mail-gun.shouldCC}") boolean shouldCC) {
         this.senderEmail = senderEmail;
         this.securityEmail = securityEmail;
         this.auditEmail = auditEmail;
         this.supportEmail = supportEmail;
-        this.mailGunApiKey = mailGunApiKey;
+        mailGunApiKey = mailGunApiKeyInput;
         this.emailContentCreator = emailContentCreator;
         this.shouldCC = shouldCC;
         this.webClient = WebClient.builder().baseUrl(mailGunUrl).build();
-        this.validationWebClient = WebClient.builder().baseUrl(mailGunValidationUrl).build();
+        validationWebClient = WebClient.builder().baseUrl(mailGunValidationUrl).build();
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private class EmailValidationResponse {
+    private static class EmailValidationResponse {
         public String result;
     }
 
-    @Override
-    public boolean validateEmailAddress(String emailAddress) {
+    public static boolean validateEmailAddress(String emailAddress) {
         AtomicBoolean isValid = new AtomicBoolean(false);
-        validationWebClient.post()
-                .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiKey))
-                .body(fromFormData("address", emailAddress))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(EmailValidationResponse.class)
-                .doOnNext(emailValidationResponse -> {
-                    isValid.set(emailValidationResponse.result.equals("deliverable"));
-                })
-                .block();
+        try {
+            validationWebClient.post()
+                    .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiKey))
+                    .body(fromFormData("address", emailAddress))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(EmailValidationResponse.class)
+                    .doOnNext(emailValidationResponse -> {
+                        isValid.set(emailValidationResponse.result.equals("deliverable"));
+                    })
+                    .block();
 
-        return isValid.get();
+            return isValid.get();
+        } catch (Exception e) {
+
+        }
+        return true;
     }
 
     @Override
