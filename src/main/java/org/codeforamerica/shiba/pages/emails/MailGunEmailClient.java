@@ -82,11 +82,11 @@ public class MailGunEmailClient implements EmailClient {
                         .doOnNext(emailValidationResponse -> {
                             isValid.set(emailValidationResponse.result.equals("deliverable"));
                         })
-                        .block()
-                ;
+                        .block();
 
                 return isValid.get();
             } catch (Exception e) {
+                e.printStackTrace();
                 return true;
             }
         } else {

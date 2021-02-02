@@ -5,6 +5,7 @@ import org.apache.commons.validator.GenericValidator;
 import org.codeforamerica.shiba.pages.emails.MailGunEmailClient;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
 
@@ -27,7 +28,7 @@ public enum Validation {
     PHONE_STARTS_WITH_ONE((strings, _previousInputs) -> !String.join("", strings).replaceAll("[^\\d]", "").startsWith("1")),
     MONEY((strings, _previousInputs) -> String.join("", strings).matches("\\d+(\\.\\d{1,2})?")),
     EMAIL((strings, previousInputs) -> {
-        return MailGunEmailClient.validateEmailAddress(String.join("", strings), String.join("", previousInputs));
+        return MailGunEmailClient.validateEmailAddress(String.join("", strings), Optional.ofNullable(previousInputs).map(inputs -> String.join("", inputs)).orElse(null));
     });
 
     private final BiPredicate<List<String>, List<String>> rule;

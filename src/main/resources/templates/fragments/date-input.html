@@ -2,8 +2,8 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="date-input (input, data)"
      class="form-group"
-     th:classappend="${!inputData.valid()} ? 'form-group--error' : ''"
-     th:with="inputData=${data.get(input.name)}, formInputName=${T(org.codeforamerica.shiba.pages.PageUtils).getFormInputName(input.name)}">
+     th:classappend="${!inputData.valid(previousInputData)} ? 'form-group--error' : ''"
+     th:with="inputData=${data.get(input.name)}, previousInputData=${previousData.get(input.name)}, formInputName=${T(org.codeforamerica.shiba.pages.PageUtils).getFormInputName(input.name)}">
     <div th:replace="fragments/form-question-prompt :: formQuestionPrompt(${input})"></div>
     <p class="text--help">
         <label th:for="${input.name}+'-month'"
@@ -29,7 +29,7 @@
            th:id="${input.name}+'-year'"
            th:name="${formInputName}" th:value="${!inputData.value.isEmpty() ? inputData.value[2]: ''}"
            th:placeholder="yyyy"/>
-    <p class="text--error" th:if="${!inputData.valid()}">
+    <p class="text--error" th:if="${!inputData.valid(previousInputData)}">
         <i class="icon-warning"></i>
         <span th:text="#{${input.validationErrorMessageKey}}"></span>
     </p>

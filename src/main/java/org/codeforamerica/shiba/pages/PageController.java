@@ -204,6 +204,7 @@ public class PageController {
         if (pageConfiguration.isStaticPage()) {
             pageToRender = pageName;
             model.put("data", pagesData.getDatasourcePagesBy(pageWorkflow.getDatasources()));
+            model.put("previousData", applicationData.getPagesData());
             if (applicationData.hasRequiredSubworkflows(pageWorkflow.getDatasources())) {
                 model.put("subworkflows", pageWorkflow.getSubworkflows(applicationData));
                 if (iterationIndex != null && !iterationIndex.isBlank()) {
@@ -217,6 +218,7 @@ public class PageController {
             pageToRender = "formPage";
             model.put("pageDatasources", pagesData.getDatasourcePagesBy(pageWorkflow.getDatasources()).mergeDatasourcePages(pagesData.getDatasourceGroupBy(pageWorkflow.getDatasources(), applicationData.getSubworkflows())));
             model.put("data", pagesData.getPageDataOrDefault(pageTemplate.getName(), pageConfiguration));
+            model.put("previousData", applicationData.getPagesData());
         }
         return new ModelAndView(pageToRender, model);
     }

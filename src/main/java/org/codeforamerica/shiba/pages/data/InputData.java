@@ -34,12 +34,12 @@ public class InputData {
     public Boolean valid(InputData previousInputData) {
         return this.validators.stream()
                 .map(Validator::getValidation)
-                .allMatch(validation -> validation.apply(this.value, previousInputData.getValue()));
+                .allMatch(validation -> validation.apply(this.value, Optional.ofNullable(previousInputData).map(InputData::getValue).orElse(null)));
     }
 
     public Optional<String> errorMessageKey(InputData previousInputData) {
         return this.validators.stream()
-                .filter(validator -> !validator.getValidation().apply(this.value, previousInputData.getValue()))
+                .filter(validator -> !validator.getValidation().apply(this.value, Optional.ofNullable(previousInputData).map(InputData::getValue).orElse(null)))
                 .findFirst()
                 .map(Validator::getErrorMessageKey);
     }
