@@ -44,6 +44,7 @@ class MailGunEmailClientTest {
     int port;
 
     String mailGunApiKey = "someMailGunApiKey";
+    String mailGunPrivateApiKey = "someMailGunPrivateApiKey";
 
     String senderEmail = "someSenderEmail";
     String securityEmail = "someSecurityEmail";
@@ -66,6 +67,7 @@ class MailGunEmailClientTest {
                 "http://localhost:" + port,
                 "http://localhost:" + port,
                 mailGunApiKey,
+                mailGunPrivateApiKey,
                 emailContentCreator,
                 false);
     }
@@ -219,7 +221,7 @@ class MailGunEmailClientTest {
         assertTrue(MailGunEmailClient.validateEmailAddress(validEmail, previousInvalidEmail));
 
         wireMockServer.verify(postRequestedFor(urlPathEqualTo("/address/validate"))
-                .withBasicAuth(new BasicCredentials("api", mailGunApiKey))
+                .withBasicAuth(new BasicCredentials("api", mailGunPrivateApiKey))
                 .withQueryParam("address",  matching(validEmail)));
     }
 
@@ -236,6 +238,7 @@ class MailGunEmailClientTest {
                 "http://localhost:" + port,
                 "http://localhost:" + port,
                 mailGunApiKey,
+                mailGunPrivateApiKey,
                 emailContentCreator,
                 true);
 

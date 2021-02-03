@@ -31,6 +31,7 @@ public class MailGunEmailClient implements EmailClient {
     private final String auditEmail;
     private final String supportEmail;
     private static String mailGunApiKey;
+    private static String mailGunApiPrivateKey;
     private final EmailContentCreator emailContentCreator;
     private final boolean shouldCC;
     private final WebClient webClient;
@@ -43,6 +44,7 @@ public class MailGunEmailClient implements EmailClient {
                               @Value("${mail-gun.url}") String mailGunUrl,
                               @Value("${mail-gun.validation-url}") String mailGunValidationUrlInput,
                               @Value("${mail-gun.api-key}") String mailGunApiKeyInput,
+                              @Value("${mail-gun.api-private-key}") String mailGunApiPrivateKeyInput,
                               EmailContentCreator emailContentCreator,
                               @Value("${mail-gun.shouldCC}") boolean shouldCC) {
         this.senderEmail = senderEmail;
@@ -50,6 +52,7 @@ public class MailGunEmailClient implements EmailClient {
         this.auditEmail = auditEmail;
         this.supportEmail = supportEmail;
         mailGunApiKey = mailGunApiKeyInput;
+        mailGunApiPrivateKey = mailGunApiPrivateKeyInput;
         this.emailContentCreator = emailContentCreator;
         this.shouldCC = shouldCC;
         this.webClient = WebClient.builder().baseUrl(mailGunUrl).build();
@@ -74,7 +77,7 @@ public class MailGunEmailClient implements EmailClient {
                 WebClient.create(mailGunValidationUrl)
                         .method(HttpMethod.POST)
                         .uri(uriBuilder -> uriBuilder.path("/address/validate").queryParam("address", emailAddress).build())
-                        .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiKey))
+                        .headers(httpHeaders -> httpHeaders.setBasicAuth("api", mailGunApiPrivateKey))
                         .accept(MediaType.APPLICATION_JSON)
                         .bodyValue("")
                         .retrieve()

@@ -284,9 +284,6 @@ public class PageController {
             pagesData = applicationData.getPagesData();
         }
 
-//        if (!pagesData.safeGetPageInputValue("contactInfo", "email").get(0).equals(pageData.get("email").getValue(0))) {
-//           PageData previousContactInfoPageData = pagesData.getPage("contactInfo");
-//        }
         PageData previousPageData = pagesData.putPage(page.getName(), pageData);
 
         if (pageData.isValid(previousPageData) &&
