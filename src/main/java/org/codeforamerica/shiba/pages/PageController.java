@@ -139,7 +139,7 @@ public class PageController {
             HttpServletResponse response,
             HttpSession httpSession
     ) {
-        setSentryContext(pageName, "Viewing page");
+        setSentryContext(httpSession.getId(), pageName, "Viewing page");
         LandmarkPagesConfiguration landmarkPagesConfiguration = applicationConfiguration.getLandmarkPages();
 
         if (landmarkPagesConfiguration.isLandingPage(pageName)) {
@@ -274,7 +274,7 @@ public class PageController {
             @PathVariable String pageName,
             HttpSession httpSession
     ) {
-        setSentryContext(pageName, "Saving page");
+        setSentryContext(httpSession.getId(), pageName, "Saving page");
         PageWorkflowConfiguration pageWorkflow = applicationConfiguration.getPageWorkflow(pageName);
 
         PageConfiguration page = pageWorkflow.getPageConfiguration();
@@ -328,6 +328,7 @@ public class PageController {
             @RequestBody(required = false) MultiValueMap<String, String> model,
             HttpSession httpSession
     ) {
+        setSentryContext(httpSession.getId(), "submit", "Submit application");
         LandmarkPagesConfiguration landmarkPagesConfiguration = this.applicationConfiguration.getLandmarkPages();
         String submitPage = landmarkPagesConfiguration.getSubmitPage();
         PageConfiguration page = applicationConfiguration.getPageWorkflow(submitPage).getPageConfiguration();
@@ -371,12 +372,13 @@ public class PageController {
         return new RedirectView("/pages/" + terminalPage);
     }
 
-    private void setSentryContext(String pageName, String message) {
+    private void setSentryContext(String sessionId, String pageName, String message) {
         Sentry.configureScope(scope -> {
             Breadcrumb breadcrumb = new Breadcrumb(message);
             breadcrumb.setData("pageName", ofNullable(pageName).orElse("null"));
             scope.addBreadcrumb(breadcrumb);
             scope.setContexts("applicationId", applicationData.getId());
+            scope.setContexts("sessionId", sessionId);
         });
     }
 }

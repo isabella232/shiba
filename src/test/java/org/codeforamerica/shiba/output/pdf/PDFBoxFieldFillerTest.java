@@ -97,7 +97,7 @@ class PDFBoxFieldFillerTest {
 
     @Test
     void shouldStripUnsupportedUnicode() throws IOException {
-        String submittedValue = "Michael😃";
+        String submittedValue = "Michael😃ℬ";
         String expectedValue = "Michael";
 
         Collection<PdfField> fields = List.of(

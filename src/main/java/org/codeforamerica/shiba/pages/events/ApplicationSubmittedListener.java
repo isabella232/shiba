@@ -1,5 +1,7 @@
 package org.codeforamerica.shiba.pages.events;
 
+import io.sentry.Breadcrumb;
+import io.sentry.Sentry;
 import org.codeforamerica.shiba.County;
 import org.codeforamerica.shiba.CountyMap;
 import org.codeforamerica.shiba.application.Application;
@@ -77,6 +79,7 @@ public class ApplicationSubmittedListener {
 
         emailParser.parse(applicationData)
                 .ifPresent(email -> {
+                    setSentryContext(event, "Send confirmation email");
                     String applicationId = application.getId();
                     ExpeditedEligibility expeditedEligibility = expeditedEligibilityDecider.decide(application.getApplicationData());
                     List<Document> docs = documentListParser.parse(applicationData);
@@ -91,7 +94,7 @@ public class ApplicationSubmittedListener {
         if (featureFlags.get("submit-via-email").isOff()) {
             return;
         }
-
+        setSentryContext(event, "Send caseworker email");
         Application application = applicationRepository.find(event.getApplicationId());
         PageData personalInfo = application.getApplicationData().getPageData("personalInfo");
         String applicationId = application.getId();
@@ -113,5 +116,14 @@ public class ApplicationSubmittedListener {
         if (application.getCounty() == County.Other) {
             emailClient.sendNonPartnerCountyAlert(application.getId(), application.getCompletedAt());
         }
+    }
+
+    private void setSentryContext(ApplicationSubmittedEvent event, String message) {
+        Sentry.configureScope(scope -> {
+            Breadcrumb breadcrumb = new Breadcrumb(message);
+            scope.addBreadcrumb(breadcrumb);
+            scope.setContexts("applicationId", event.getApplicationId());
+            scope.setContexts("sessionId", event.getSessionId());
+        });
     }
 }
