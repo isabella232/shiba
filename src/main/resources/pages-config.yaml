@@ -1125,6 +1125,38 @@ pageDefinitions:
             - value: NO_UNEARNED_INCOME_SELECTED
               messageKey: general.inputs.none-of-the-above
               isNone: true
+  - &unearnedIncomeCCAP
+    name: unearnedIncomeCCAP
+    pageTitle:
+      value: unearned-income.title
+    headerKey:
+      value: unearned-income.do-you-get-income-from-any-of-these-sources
+      conditionalValues:
+        - value: unearned-income.household-get-income-from-any-of-these-sources
+          condition: *doesNotLiveAlone?
+    headerHelpMessageKey:
+      value: unearned-income.check-all-that-apply-you-do-not-need-to-report-income-you-havent-received-yet
+    inputs:
+      - name: unearnedIncomeCCAP
+        type: CHECKBOX
+        validators:
+          - validation: SELECT_AT_LEAST_ONE
+            errorMessageKey: general.validation.make-sure-you-choose-none-of-the-above-or-another-option
+        options:
+          selectableOptions:
+            - value: BENEFITS_PROGRAMS
+              messageKey: unearned-income-ccap.benefits-programs-like
+            - value: INSURANCE_PAYMENTS
+              messageKey: unearned-income-ccap.insurance-payments
+            - value: CONTRACT_FOR_DEED
+              messageKey: unearned-income-ccap.contract-for-deed
+            - value: MONEY_FROM_A_TRUST
+              messageKey: unearned-income-ccap.money-from-a-trust
+            - value: HEALTH_CARE_REIMBURSEMENT
+              messageKey: unearned-income-ccap.health-care-reimbursement
+            - value: NO_UNEARNED_INCOME_SELECTED
+              messageKey: general.inputs.none-of-the-above
+              isNone: true
   - &unearnedIncomeSources
     name: unearnedIncomeSources
     pageTitle:
@@ -2245,6 +2277,25 @@ workflow:
       - pageName: unearnedIncomeSources
     datasources:
       - pageName: doYouLiveAlone
+  unearnedIncomeCCAP:
+    pageConfiguration: *unearnedIncomeCCAP
+    nextPages:
+      - pageName: unearnedIncomeSources
+    datasources:
+      - pageName: choosePrograms
+      - pageName: doYouLiveAlone
+      - groupName: household
+        pageName: householdMemberInfo
+    skipCondition:
+      compositeConditions:
+        - logicalOperator: AND
+          compositeConditions:
+            - conditions:
+                - *applicantDidNotChooseCCAP?
+            - logicalOperator: OR
+              conditions:
+                - *householdMemberDidNotChooseCCAP?
+                - *livesAlone?
   unearnedIncomeSources:
     pageConfiguration: *unearnedIncomeSources
     nextPages:
