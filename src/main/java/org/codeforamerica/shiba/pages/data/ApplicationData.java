@@ -1,15 +1,18 @@
 package org.codeforamerica.shiba.pages.data;
 
 import lombok.Data;
+import org.codeforamerica.shiba.NewCondition;
 import org.codeforamerica.shiba.application.FlowType;
 import org.codeforamerica.shiba.application.parsers.PageInputCoordinates;
-import org.codeforamerica.shiba.inputconditions.Condition;
 import org.codeforamerica.shiba.pages.config.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Data
@@ -72,7 +75,7 @@ public class ApplicationData {
 
         return pageWorkflowConfiguration.getNextPages().stream()
                 .filter(nextPage -> {
-                    Condition condition = nextPage.getCondition();
+                    NewCondition condition = nextPage.getCondition();
                     if (condition != null) {
                         return condition.matches(pageData, pagesData);
                     }

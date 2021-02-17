@@ -5,16 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.codeforamerica.shiba.NewCondition;
 import org.codeforamerica.shiba.pages.data.PageData;
 import org.codeforamerica.shiba.pages.data.PagesData;
-
-import java.util.List;
 
 @Data
 @With
 @AllArgsConstructor
 @NoArgsConstructor
-public class Condition {
+public class Condition implements NewCondition {
     String pageName;
     String input;
     String value;
@@ -24,6 +23,7 @@ public class Condition {
     String subworkflow;
     Integer iteration;
 
+    @Override
     public boolean appliesForAllIterations() {
         return getSubworkflow() != null && getIteration() == null;
     }

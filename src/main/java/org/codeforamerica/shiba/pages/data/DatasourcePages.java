@@ -4,7 +4,6 @@ import org.codeforamerica.shiba.inputconditions.Condition;
 import org.codeforamerica.shiba.output.CompositeCondition;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public class DatasourcePages extends HashMap<String, PageData> {
