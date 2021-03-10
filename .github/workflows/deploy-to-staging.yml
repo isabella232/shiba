@@ -12,8 +12,11 @@ jobs:
     name: Merge
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: git fetch --prune --unshallow
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+          ref: 'master'
       - name: Merge master -> staging
         uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
         with:
