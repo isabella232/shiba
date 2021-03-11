@@ -215,7 +215,7 @@ public class PageController {
             model.put("applicationData", applicationData);
 
             if (landmarkPagesConfiguration.isUploadDocumentsPage(pageName)) {
-                model.put("uploadedDocuments", applicationData.getUploadedDocuments());
+                model.put("uploadedDocs", applicationData.getUploadedDocs());
             }
 
             if (applicationData.hasRequiredSubworkflows(pageWorkflow.getDatasources())) {

@@ -20,7 +20,7 @@ public class ApplicationData {
     private PagesData pagesData = new PagesData();
     private Subworkflows subworkflows = new Subworkflows();
     private Map<String, PagesData> incompleteIterations = new HashMap<>();
-    private List<UploadedDocument> uploadedDocuments = new ArrayList<>();
+    private List<UploadedDocument> uploadedDocs = new ArrayList<>();
 
     public void setStartTimeOnce(Instant instant) {
         if (startTime == null) {
@@ -130,14 +130,14 @@ public class ApplicationData {
 
     public void addUploadedDocument(MultipartFile file) {
         UploadedDocument uploadedDocument = new UploadedDocument(file.getOriginalFilename(), file.getSize());
-        uploadedDocuments.add(uploadedDocument);
+        uploadedDocs.add(uploadedDocument);
         // TODO Save file since MultipartFile will not retain it after the request completes
     }
 
     public void removeUploadedDocument(String fileToDelete) {
-        UploadedDocument toRemove = uploadedDocuments.stream()
+        UploadedDocument toRemove = uploadedDocs.stream()
                 .filter(uploadedDocument -> uploadedDocument.getFilename().equals(fileToDelete))
                 .findFirst().orElse(null);
-        uploadedDocuments.remove(toRemove);
+        uploadedDocs.remove(toRemove);
     }
 }
